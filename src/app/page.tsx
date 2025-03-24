@@ -1,45 +1,38 @@
-import Link from "next/link";
-import { api, HydrateClient } from "~/trpc/server";
+"use client";
+import { useState } from "react";
 
-export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
+export default function Home() {
+  const [message, setMessage] = useState("");
+  const [inputValue, setInputValue] = useState("");
 
-  void api.post.getLatest.prefetch();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // prevent refresh
+
+    const response = await fetch('/api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(inputValue)
+    });
+    const data = await response.json();
+    setMessage(data.message);
+  };
 
   return (
-    <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-          </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
-          </div>
-          <h1>Post Request Test is up</h1>
-        </div>
-      </main>
-    </HydrateClient>
+    <div>
+      <form onSubmit={handleSubmit}>
+        <input 
+          type="text" 
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+        />
+        <button type="submit">
+          Submit
+        </button>
+      </form>
+      
+      {message && <p>{message}</p>}
+    </div>
   );
 }
