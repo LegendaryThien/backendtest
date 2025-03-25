@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 
-// Define the type for our API response
 interface ApiResponse {
   message: string;
 }
@@ -20,7 +19,7 @@ export default function Home() {
       },
       body: JSON.stringify(inputValue)
     });
-    // Add type assertion to the response.json()
+
     const data = await response.json() as ApiResponse;
     setMessage(data.message);
   };
@@ -37,8 +36,7 @@ export default function Home() {
           Submit
         </button>
       </form>
-      
-      {message && <p>{message}</p>}
+      <p>{message}</p>
     </div>
   );
 }
