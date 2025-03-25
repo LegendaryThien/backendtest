@@ -10,7 +10,7 @@ export async function GET() {
             providedCode: 
             `
 
-            
+
             function ListNode(val, next) {
                 this.val = (val===undefined ? 0 : val)
                 this.next = (next===undefined ? null : next)
@@ -43,4 +43,21 @@ export async function GET() {
         }
     });
 }
+
+interface ApiResponse {
+    message: string;
+  }
+
+export async function POST(request: Request) {
+    const data = await request.json() as string;
+    
+    const response: ApiResponse = {
+        message: data === "[0]"
+            ? "Success!"
+            : "Failed."
+    };
+
+    return NextResponse.json(response);
+}
+
 
