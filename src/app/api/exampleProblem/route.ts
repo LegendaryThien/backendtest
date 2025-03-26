@@ -44,20 +44,4 @@ export async function GET() {
     });
 }
 
-interface ApiResponse {
-    message: string;
-  }
-
-export async function POST(request: Request) {
-    const data = await request.json() as string;
-    
-    const response: ApiResponse = {
-        message: data === "[0]"
-            ? "Success!"
-            : "Failed."
-    };
-
-    return NextResponse.json(response);
-}
-
 
