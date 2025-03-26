@@ -27,13 +27,6 @@ export async function POST(request: Request) {
     const body = await request.json() as { name: string }
     const { name } = body
 
-    if (!name) {
-        return NextResponse.json(
-            { error: 'Name is required' },
-            { status: 400, headers: corsHeaders }
-        )
-    }
-
     // Check if user already exists
     const existingUser = leaderboard.find(user => user.name === name)
     
