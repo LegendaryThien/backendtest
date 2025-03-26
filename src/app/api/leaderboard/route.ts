@@ -9,6 +9,11 @@ interface LeaderboardEntry {
 // Use const instead of let since the reference isn't reassigned
 const leaderboard: LeaderboardEntry[] = [];
 
+// Add GET handler to fetch the leaderboard
+export async function GET() {
+    return NextResponse.json(leaderboard)
+}
+
 export async function POST(request: Request) {
     try {
         const body = await request.json() as { name: string }
@@ -29,7 +34,8 @@ export async function POST(request: Request) {
             leaderboard.push({ name, rank: leaderboard.length + 1 })
         }
 
-        return NextResponse.json(leaderboard)
+        // Return success status but not the leaderboard
+        return NextResponse.json({ success: true })
     } catch (error: unknown) {
         console.error('Leaderboard update error:', error);
         return NextResponse.json(
