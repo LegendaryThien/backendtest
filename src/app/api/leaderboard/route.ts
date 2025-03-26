@@ -24,13 +24,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    console.log('Received POST request');
     const body = await request.json() as { name: string }
-    console.log('Parsed body:', body);
     const { name } = body
 
     if (!name) {
-        console.log('Name is missing');
         return NextResponse.json(
             { error: 'Name is required' },
             { status: 400, headers: corsHeaders }
@@ -39,12 +36,10 @@ export async function POST(request: Request) {
 
     // Check if user already exists
     const existingUser = leaderboard.find(user => user.name === name)
-    console.log('Existing user:', existingUser);
     
     if (!existingUser) {
         // If new user, add them to leaderboard
         leaderboard.push({ name, rank: leaderboard.length + 1 })
-        console.log('Added new user to leaderboard');
     }
 
     return NextResponse.json({ success: true }, { headers: corsHeaders })
