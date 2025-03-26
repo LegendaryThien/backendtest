@@ -7,7 +7,7 @@ export async function GET() {
     });
 }
 
-// Define types for the response
+// interface for post request
 interface ApiResponse {
     message: string;
   }
