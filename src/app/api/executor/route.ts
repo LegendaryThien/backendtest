@@ -22,6 +22,21 @@ interface Submission {
 
 const submissions: string[] = [];
 
+// Add these interfaces for type safety
+interface PistonRunResult {
+    stdout: string;
+    stderr: string;
+    output: string;
+    code: number;
+    signal: string | null;
+}
+
+interface PistonResponse {
+    language: string;
+    version: string;
+    run: PistonRunResult;
+}
+
 export async function OPTIONS() {
     return NextResponse.json({}, { headers: corsHeaders })
 }
@@ -136,7 +151,7 @@ ${testCases["c++"]}`,
             })
         });
 
-        const result = await response.json();
+        const result = await response.json() as PistonResponse;
         
         if (result.run.stderr) {
             throw new Error(result.run.stderr);
