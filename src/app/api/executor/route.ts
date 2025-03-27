@@ -3,8 +3,6 @@ import { exec } from 'child_process';
 import { promises as fs } from 'fs';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
-import { PythonShell } from 'python-shell';
-import path from 'path';
 
 declare module 'tmp';
 
