@@ -217,7 +217,7 @@ int main() {
     vector<int> output;
     while (result) {
         output.push_back(result->val);
-        result = result.next;
+        result = result->next;
     }
     
     // Print result
