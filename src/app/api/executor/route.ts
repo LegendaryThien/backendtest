@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { exec } from 'child_process';
-import { promisify } from 'util';
 
 // all the CORS stuff so localhost can access the server
 const corsHeaders = {
@@ -9,8 +7,6 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
     'Access-Control-Max-Age': '86400', // 24 hours
 };
-
-const execAsync = promisify(exec);
 
 const PISTON_URL = 'https://emkc.org/api/v2/piston';
 
