@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server'
 import { exec } from 'child_process';
-import { promises as fs } from 'fs';
-import * as tmp from 'tmp';
 import { promisify } from 'util';
-
-declare module 'tmp';
 
 // all the CORS stuff so localhost can access the server
 const corsHeaders = {
@@ -16,9 +12,7 @@ const corsHeaders = {
 
 const execAsync = promisify(exec);
 
-export async function OPTIONS() {
-    return NextResponse.json({}, { headers: corsHeaders })
-}
+const PISTON_URL = 'https://emkc.org/api/v2/piston';
 
 // the JUICE, the main stuff ahahaha
 interface Submission {
@@ -28,6 +22,10 @@ interface Submission {
 
 const submissions: string[] = [];
 
+export async function OPTIONS() {
+    return NextResponse.json({}, { headers: corsHeaders })
+}
+
 export async function GET() {
     return NextResponse.json(submissions, { headers: corsHeaders })
 }
@@ -35,249 +33,127 @@ export async function GET() {
 export async function POST(request: Request) {
     const code = await request.json() as Submission;
 
-    if (code.language === "javascript") {
-        const testcase = `
+    // Language-specific test cases
+    const testCases = {
+        javascript: `
             function executeTest() {
                 const l1 = new ListNode(0);
                 const l2 = new ListNode(0);
-
-                // Get result
                 const result = addTwoNumbers(l1, l2);
-
-                // Convert to array format
                 const output = [];
                 let current = result;
                 while (current) {
                     output.push(current.val);
                     current = current.next;
                 }
-
-                return JSON.stringify(output);
+                console.log(JSON.stringify(output));
             }
-            executeTest();
-        `;
-        const fullcode = code.submission + testcase;
-        const result = eval(fullcode) as string;
-        submissions.push(JSON.stringify(result));
-        return NextResponse.json({ success: true, results: result }, { headers: corsHeaders });
-    }
-
-
-    // python
-    else if (code.language === "python") {
-        let tmpFile;
-        try {
-            // Create temporary file
-            tmpFile = tmp.fileSync({ postfix: '.py' });
-            const filePath = tmpFile.name;
-            
-            const testcase = `
+            executeTest();`,
+        python: `
 def execute_test():
     l1 = ListNode(0)
     l2 = ListNode(0)
-    
-    # Get result
     result = addTwoNumbers(l1, l2)
-    
-    # Convert to array format
     output = []
     current = result
     while current:
         output.append(current.val)
         current = current.next
-    
     print(output)
 
-execute_test()
-`;
-            
-            // Combine submission with test case
-            const fullCode = `${code.submission}\n\n${testcase}`;
-            
-            // Write the code to temporary file
-            await fs.writeFile(filePath, fullCode);
-
-            // Execute Python code
-            const { stdout, stderr } = await execAsync(`python3 "${filePath}"`);
-
-            if (stderr) {
-                throw new Error(stderr);
-            }
-
-            submissions.push(stdout.trim());
-            return NextResponse.json({ 
-                success: true, 
-                results: stdout.trim() 
-            }, { headers: corsHeaders });
-            
-        } catch (error: unknown) {
-            return NextResponse.json({ 
-                success: false, 
-                error: error instanceof Error ? error.message : 'Execution failed'
-            }, { headers: corsHeaders });
-        } finally {
-            // Cleanup temporary file
-            if (tmpFile) {
-                tmpFile.removeCallback();
-            }
-        }
-    }
-
-
-
-    // java
-    else if (code.language === "java") {    
-        let tmpDir;
-        try {
-            // Create temporary directory
-            tmpDir = tmp.dirSync({ unsafeCleanup: true });
-            const className = 'Solution';
-            const javaFile = `${tmpDir.name}/${className}.java`;
-            
-            // The test case for Java
-            const testcase = `
+execute_test()`,
+        java: `
     public static void main(String[] args) {
         ListNode l1 = new ListNode(0);
         ListNode l2 = new ListNode(0);
-        
         ListNode result = addTwoNumbers(l1, l2);
-        
-        // Convert to array format
         java.util.List<Integer> output = new java.util.ArrayList<>();
         while (result != null) {
             output.add(result.val);
             result = result.next;
         }
-        
         System.out.println(output.toString());
-    }`;
-
-            // Combine submission with test case
-            const fullCode = `
-public class ${className} {
-    ${code.submission}
-    
-    ${testcase}
-}`;
-
-            // Write the code to Solution.java file
-            await fs.writeFile(javaFile, fullCode);
-
-            // Compile the Java code
-            const { stderr: compileError } = await execAsync(`javac "${javaFile}"`);
-            if (compileError) {
-                throw new Error(compileError);
-            }
-
-            // Execute the compiled Java program
-            const { stdout, stderr } = await execAsync(`java -cp "${tmpDir.name}" ${className}`);
-            
-            if (stderr) {
-                throw new Error(stderr);
-            }
-
-            submissions.push(stdout.trim());
-            return NextResponse.json({ success: true, results: stdout.trim() }, { headers: corsHeaders });
-        } catch (error: unknown) {
-            return NextResponse.json({ 
-                success: false, 
-                error: error instanceof Error ? error.message : 'Execution failed'
-            }, { headers: corsHeaders });
-        } finally {
-            // Clean up temporary directory
-            if (tmpDir) {
-                tmpDir.removeCallback();
-            }
-        }
-    }
-
-
-
-
-    
-    // c++
-    else if (code.language === "c++") {
-        let tmpobj;
-        let outputFile;
-        try {
-            // Create temporary files
-            tmpobj = tmp.fileSync({ postfix: '.cpp' });
-            outputFile = tmp.tmpNameSync();
-
-            // The test case for C++
-            const testcase = `
+    }`,
+        "c++": `
 int main() {
-    // Call your function here
     ListNode* l1 = new ListNode(0);
     ListNode* l2 = new ListNode(0);
-    
     ListNode* result = addTwoNumbers(l1, l2);
-    
-    // Convert result to output
     vector<int> output;
     while (result) {
         output.push_back(result->val);
         result = result->next;
     }
-    
-    // Print result
     cout << "[";
     for (size_t i = 0; i < output.size(); ++i) {
         if (i > 0) cout << ",";
         cout << output[i];
     }
     cout << "]" << endl;
-    
     return 0;
-}`;
+}`
+    };
 
-            // Combine submission with test case and necessary includes
-            const fullCode = `
+    // Language-specific wrappers and includes
+    const wrappers = {
+        javascript: (code: string) => `${code}\n${testCases.javascript}`,
+        python: (code: string) => `${code}\n${testCases.python}`,
+        java: (code: string) => `
+public class Main {
+    ${code}
+    ${testCases.java}
+}`,
+        "c++": (code: string) => `
 #include <iostream>
 #include <vector>
 using namespace std;
+${code}
+${testCases["c++"]}`,
+    };
 
-${code.submission}
+    // Map our language names to Piston's language names
+    const languageMap = {
+        'javascript': 'javascript',
+        'python': 'python3',
+        'java': 'java',
+        'c++': 'cpp'
+    };
 
-${testcase}`;
+    try {
+        const wrappedCode = wrappers[code.language](code.submission);
+        
+        const response = await fetch(`${PISTON_URL}/execute`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                language: languageMap[code.language],
+                version: '*',
+                files: [{
+                    content: wrappedCode
+                }]
+            })
+        });
 
-            // Write the code to temporary file
-            await fs.writeFile(tmpobj.name, fullCode);
-
-            // Compile the code
-            await execAsync(`g++ ${tmpobj.name} -o ${outputFile}`);
-
-            // Execute the compiled program
-            const { stdout, stderr } = await execAsync(outputFile);
-
-            if (stderr) {
-                throw new Error(stderr);
-            }
-
-            submissions.push(stdout.trim());
-            return NextResponse.json({ success: true, results: stdout.trim() }, { headers: corsHeaders });
-        } catch (error: unknown) {
-            return NextResponse.json({ 
-                success: false, 
-                error: error instanceof Error ? error.message : 'Execution failed'
-            }, { headers: corsHeaders });
-        } finally {
-            // Clean up temporary files
-            if (tmpobj) {
-                tmpobj.removeCallback();
-            }
-            if (outputFile) {
-                try {
-                    await fs.unlink(outputFile);
-                } catch (error) {
-                    console.error('Error cleaning up C++ output file:', error);
-                }
-            }
+        const result = await response.json();
+        
+        if (result.run.stderr) {
+            throw new Error(result.run.stderr);
         }
-    }
 
-    // else
-    else {
-        return NextResponse.json({ success: false }, { headers: corsHeaders })
+        const output = result.run.output.trim();
+        submissions.push(output);
+        
+        return NextResponse.json({
+            success: true,
+            results: output
+        }, { headers: corsHeaders });
+        
+    } catch (error) {
+        return NextResponse.json({ 
+            success: false, 
+            error: error instanceof Error ? error.message : 'Execution failed'
+        }, { headers: corsHeaders });
     }
 }
