@@ -37,15 +37,3 @@ export async function GET() {
         }
     });
 }
-
-interface Submission {
-    submission: string;
-}
-
-export async function POST(request: Request) {
-    const body = await request.json() as Submission
-    const { submission } = body
-
-    const result = eval(submission)
-    
-}
