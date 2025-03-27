@@ -12,17 +12,6 @@ export async function GET() {
                 "Remember that the numbers are stored in reverse order in the linked lists.",
                 "Don't forget to handle cases where one list is longer than the other."
             ],
-            providedCode: 
-            `
-
-
-            function ListNode(val, next) {
-                this.val = (val===undefined ? 0 : val)
-                this.next = (next===undefined ? null : next)
-            }
-
-
-            `,
             testcase: 
             `
                
@@ -49,4 +38,14 @@ export async function GET() {
     });
 }
 
+interface Submission {
+    submission: string;
+}
 
+export async function POST(request: Request) {
+    const body = await request.json() as Submission
+    const { submission } = body
+
+    const result = eval(submission)
+    
+}
