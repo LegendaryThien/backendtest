@@ -127,11 +127,12 @@ execute_test()
 
     // java
     else if (code.language === "java") {    
+        let tmpDir;
         try {
             // Create temporary directory
-            const tmpDir = tmp.dirSync();
+            tmpDir = tmp.dirSync({ unsafeCleanup: true });
             const className = 'Solution';
-            const javaFile = `${tmpDir.name}/${className}.java`; // Create Solution.java file
+            const javaFile = `${tmpDir.name}/${className}.java`;
             
             // The test case for Java
             const testcase = `
@@ -163,11 +164,14 @@ public class ${className} {
             await fs.writeFile(javaFile, fullCode);
 
             // Compile the Java code
-            await execAsync(`javac ${javaFile}`);
+            const { stderr: compileError } = await execAsync(`javac "${javaFile}"`);
+            if (compileError) {
+                throw new Error(compileError);
+            }
 
-            // Execute the compiled program
-            const { stdout, stderr } = await execAsync(`java -cp ${tmpDir.name} ${className}`);
-
+            // Execute the compiled Java program
+            const { stdout, stderr } = await execAsync(`java -cp "${tmpDir.name}" ${className}`);
+            
             if (stderr) {
                 throw new Error(stderr);
             }
@@ -179,6 +183,11 @@ public class ${className} {
                 success: false, 
                 error: error instanceof Error ? error.message : 'Execution failed'
             }, { headers: corsHeaders });
+        } finally {
+            // Clean up temporary directory
+            if (tmpDir) {
+                tmpDir.removeCallback();
+            }
         }
     }
 
@@ -188,10 +197,12 @@ public class ${className} {
     
     // c++
     else if (code.language === "c++") {
+        let tmpobj;
+        let outputFile;
         try {
             // Create temporary files
-            const tmpobj = tmp.fileSync({ postfix: '.cpp' });
-            const outputFile = tmp.tmpNameSync();
+            tmpobj = tmp.fileSync({ postfix: '.cpp' });
+            outputFile = tmp.tmpNameSync();
 
             // The test case for C++
             const testcase = `
@@ -250,6 +261,18 @@ ${testcase}`;
                 success: false, 
                 error: error instanceof Error ? error.message : 'Execution failed'
             }, { headers: corsHeaders });
+        } finally {
+            // Clean up temporary files
+            if (tmpobj) {
+                tmpobj.removeCallback();
+            }
+            if (outputFile) {
+                try {
+                    await fs.unlink(outputFile);
+                } catch (error) {
+                    console.error('Error cleaning up C++ output file:', error);
+                }
+            }
         }
     }
 
