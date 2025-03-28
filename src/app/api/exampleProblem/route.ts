@@ -12,28 +12,6 @@ export async function GET() {
                 "Remember that the numbers are stored in reverse order in the linked lists.",
                 "Don't forget to handle cases where one list is longer than the other."
             ],
-            testcase: 
-            `
-               
-            
-            const l1 = new ListNode(0);
-            const l2 = new ListNode(0);
-
-            // Get result
-            const result = addTwoNumbers(l1, l2);
-
-            // Convert to array format
-            const output = [];
-            let current = result;
-            while (current) {
-                output.push(current.val);
-                current = current.next;
-            }
-
-            return JSON.stringify(output);
-
-
-            `
         }
     });
 }
