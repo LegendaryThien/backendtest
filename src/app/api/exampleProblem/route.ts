@@ -11,7 +11,7 @@ export async function GET() {
                 "Draw out the addition process to understand how to handle carry-over digits.",
                 "Remember that the numbers are stored in reverse order in the linked lists.",
                 "Don't forget to handle cases where one list is longer than the other."
-            ],
+            ]
         }
     });
 }
